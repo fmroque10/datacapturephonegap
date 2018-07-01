@@ -1,0 +1,294 @@
+<html>
+  <head>
+    <script type="text/javascript" src="jquery-3.3.1.js"></script>
+  </head>
+
+<script type='text/javascript'>
+
+         var thisDate = new Date();
+         var phone_idglobal = "";
+         var codigo_vendedorglobal = "";
+         var cliente_id = "";
+         var cliente= "";
+         var codcia_global = "";
+
+//*********************************
+//Database init variables
+  var db = openDatabase("PollDB", "1.0", "PollDB", 200000);  // Open SQLite Database
+  var createPoll = "CREATE TABLE IF NOT EXISTS poll (poll_id INTEGER PRIMARY KEY AUTOINCREMENT, fecha_mov TEXT, name TEXT, email TEXT, dateofbirth TEXT, car TEXT,model TEXT, comment TEXT, uploaded INTEGER)";
+  //Creates table to store values.
+
+//*********************************
+
+  var db = openDatabase("PollDB", "1.0", "PollDB", 200000);  // Open SQLite Database
+  var createPoll = "CREATE TABLE IF NOT EXISTS poll (poll_id INTEGER PRIMARY KEY AUTOINCREMENT, fecha_mov TEXT, name TEXT, email TEXT, dateofbirth TEXT, car TEXT,model TEXT, comment TEXT, uploaded INTEGER)";
+
+function showRecords() // Function For Retrive data from Database Display records as list
+
+{
+
+
+
+}
+
+function createTable()  // Function for Create Table in SQLite.
+
+{
+
+    db.transaction(function (tx) { tx.executeSql(createPoll, [], showRecords, onError); });
+
+}
+
+
+
+
+
+function initDatabase()  // Function Call When Page is ready.
+
+{
+
+    try {
+
+        if (!window.openDatabase)  // Check browser is supported SQLite or not.
+
+        {
+
+            alert('Databases are not supported in this browser.');
+
+        }
+
+        else {
+
+            createTable();  // If supported then call Function for create table in SQLite
+
+        }
+
+    }
+
+    catch (e) {
+
+        if (e == 2) {
+
+            // Version number mismatch.
+
+            console.log("Invalid database version.");
+
+        } else {
+
+            console.log("Unknown error " + e + ".");
+
+        }
+
+        return;
+
+    }
+
+}
+
+function onError(tx, error) // Function for Hendeling Error...
+
+{
+
+    alert(error.message);
+
+}
+
+//****************************************************
+//Gets the FORM input data from session variables.
+//Calls InsMovements to insert data in local database.
+//****************************************************
+
+function GetParameter()
+{
+
+  var date = new Date();
+  var fecha_mov = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " ";
+  fecha_mov = fecha_mov +  date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+
+
+// Check browser support
+	if (typeof(Storage) !== "undefined") {
+
+			var name=localStorage.getItem("name");
+			var datebirth=localStorage.getItem("datebirth");
+            var email=localStorage.getItem("email");
+            var car=localStorage.getItem("car");
+            var model = localStorage.getItem("model");
+            var comment = localStorage.getItem("comment");
+            InsMovements(fecha_mov , name , datebirth,email, car,model,comment);
+
+
+	} else {
+	    document.getElementById("email").value = "Sorry, your browser does not support Web Storage...";
+	}
+
+}
+
+//***********************************************
+// This JQuery function "ready" executes code when     //
+// the page is ready for load...				       //
+// Calls initDatabase to open the Database and if not  //
+// exists, creates tables.                             //
+// Then calls GetParameter to get the input data
+// from session variables.
+//***********************************************
+
+$(document).ready(function () // Call function when page is ready for load..
+
+{
+;
+
+    $("body").fadeIn(2000); // Fede In Effect when Page Load..
+
+    initDatabase();
+    GetParameter();
+
+
+});
+
+function resetForm() // Function for reset form input values.
+
+{
+
+    //$("#username").val("");
+
+    //$("#useremail").val("");
+
+    //$("#id").val("");
+
+}
+
+
+function loadAndReset() //Function for Load and Reset...
+
+{
+
+    resetForm();
+
+    showRecords()
+
+}
+
+//***********************************************
+// After the record is uploaded to the webserver,
+// Updated as "uploaded=1" on the
+// local database.
+//***********************************************
+
+function UpdateSentMovement (poll_id)
+{
+
+ var insertStatement = "update poll set uploaded = 1 where poll_id=?";
+ db.transaction(function (tx) { tx.executeSql(insertStatement, [poll_id], loadAndReset, onError); });
+
+}
+
+//***********************************************
+// XML build.
+// getJSON function to call webservice in
+// load_movimientos01.php.
+// JSON response is stored in variable "data".
+// Parsed with JQuery function $.each.
+// Poll_id value got from response and pass as
+// parameter to update local record and set to "uploaded = 1"
+//***********************************************
+
+function UpMovements(poll_id,fecha_mov,name,email,dateofbirth,car,model,comment,uploaded)
+{
+xml_str =  "<Movements>";
+xml_str = xml_str + "<Movement>";
+xml_str = xml_str + "<poll_id>" + poll_id +"</poll_id>";
+xml_str = xml_str + "<fecha_mov>" + fecha_mov +"</fecha_mov>";
+xml_str = xml_str + "<name>" + name +"</name>";
+xml_str = xml_str + "<email>" + email +"</email>";
+xml_str = xml_str + "<dateofbirth>" + dateofbirth+"</dateofbirth>";
+xml_str = xml_str + "<car>" + car+"</car>";
+xml_str = xml_str + "<model>" + model+"</model>";
+xml_str = xml_str + "<comment>" + comment+"</comment>";
+xml_str = xml_str + "<uploaded>" + uploaded+"</uploaded>";
+xml_str = xml_str + "</Movement>";
+xml_str = xml_str + "</Movements>";
+
+var url='http://apps.metricst.info/phonegapjs/load_movimientos01.php?callback?&movimiento_xml=';
+url = url + xml_str;
+
+         $.getJSON(url, function(data) {
+              $.each(data, function(i,item){
+         	   var poll_id = data[i].codigo;
+         	       UpdateSentMovement (poll_id);
+         	  });
+
+    });
+}
+
+
+
+//***********************************************
+// Get the records from POLL table where uploaded = 0.
+// Call UpMovements to build XML and send the data to webserver.
+//***********************************************
+function MovementstoUP ()
+{
+
+	var selectquery = "SELECT * FROM poll where uploaded = 0 ";
+ 	db.transaction(function (tx)
+        {
+		tx.executeSql(selectquery, [], function (tx, result)
+		{
+		    dataset = result.rows;
+		    for (var i = 0, item = null; i < dataset.length; i++)
+		   {
+
+		            item = dataset.item(i);
+		            var poll_id=item['poll_id'];
+		            var fecha_mov=item['fecha_mov'];
+			        var name=item['name'];
+		            var email=item['email'];
+                    var dateofbirth=item['dateofbirth'];
+		            var car=item['car'];
+			        var model=item['model'];
+		            var comment=item['comment'];
+                    var uploaded=item['uploaded'];
+
+                            UpMovements(poll_id,fecha_mov,name,email,dateofbirth,car,model,comment,uploaded);
+                  }
+
+		});
+
+    });
+
+}
+
+
+
+//***********************************************
+// Inserts data capture by HTML5 into the table Poll
+// on local database.
+// Calls MovementstoUp to send data to webserver.
+// Calls MainScreeen to insert another record.
+//***********************************************
+
+function InsMovements(fecha_mov , name , dateofbirth,email    , car ,model , comment )
+{
+ var uploaded = 0;
+ var insertStatement = "INSERT INTO poll (fecha_mov , name, email,dateofbirth,car,model,comment,uploaded) VALUES (?, ?, ?,?, ?, ?,?, ?)";
+ db.transaction(function (tx) {
+ tx.executeSql(insertStatement, [fecha_mov , name, email,dateofbirth,car,model,comment,uploaded], loadAndReset, onError);
+  MovementstoUP ();
+  alert("OK!");
+
+  });
+}
+</script>
+
+
+<body>
+<table>
+<tr>
+<td>
+<input type='email' class='input' name='email' id = 'email' placeholder='Usuario'/>
+</td>
+</tr>
+</table>
+</body>
+</html>
