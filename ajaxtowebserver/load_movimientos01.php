@@ -17,10 +17,10 @@ class ConnectDb {
   //instantiation of the class.
   private $conn;
 
-  private $host = "db737006173.db.1and1.com";
-  private $user = "dbo737006173";
-  private $pass = "9disicom77";
-  private $name = "db737006173";
+  private $host = "<your host>";
+  private $user = "<your user>";
+  private $pass = "<your password>";
+  private $name = "<your name>";
 
 
   private function __construct()
