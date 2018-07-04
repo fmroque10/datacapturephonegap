@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <script type="text/javascript" src="jquery-3.3.1.js"></script>
+  </head>
+<script type='text/javascript'>
+var db = openDatabase("PollDB", "1.0", "PollDB", 200000);  // Open SQLite Database
+  var createPoll = "CREATE TABLE IF NOT EXISTS poll (poll_id INTEGER PRIMARY KEY AUTOINCREMENT, fecha_mov TEXT, name TEXT, email TEXT, dateofbirth TEXT, car TEXT,model TEXT, comment TEXT, uploaded INTEGER)";
+function showRecords() // Function For Retrive data from Database Display records as list
+{
+}
+
+function createTable()  // Function for Create Table in SQLite.
+{
+   db.transaction(function (tx) { tx.executeSql(createPoll, [], showRecords, onError); });
+}
+function initDatabase()  // Function Call When Page is ready.
+{
+    try {
+        if (!window.openDatabase)  // Check browser is supported SQLite or not.
+        {
+            alert('Databases are not supported in this browser.');
+        }
+        else {
+            createTable();  // If supported then call Function for create table in SQLite
+        }
+    }
+    catch (e) {
+        if (e == 2) {
+            // Version number mismatch.
+            console.log("Invalid database version.");
+        } else {
+            console.log("Unknown error " + e + ".");
+        }
+        return;
+    }
+}
+
+function onError(tx, error) // Function for Hendeling Error...
+{
+   alert(error.message);
+}
+
+$(document).ready(function () // Call function when page is ready for load..
+
+{
+;
+
+    $("body").fadeIn(2000); // Fede In Effect when Page Load..
+    initDatabase();
+    InsMovements("2018-02-12" , "steff lynd" , "1988-10-12","steff@email.com"    , "BMW" ,"hatchback" , "everything ok" , 0 )
+});
+
+function resetForm() // Function for reset form input values.
+{
+    //$("#username").val("");
+    //$("#useremail").val("");
+    //$("#id").val("");
+}
+
+
+function loadAndReset() //Function for Load and Reset...
+{
+    resetForm();
+    showRecords()
+}
+
+function InsMovements(fecha_mov , name , dateofbirth,email    , car ,model , comment , uploaded )
+{
+ var insertStatement = "INSERT INTO poll (fecha_mov , name, email,dateofbirth,car,model,comment,uploaded) VALUES (?, ?, ?,?, ?, ?,?, ?)";
+ db.transaction(function (tx) {
+ tx.executeSql(insertStatement, [fecha_mov , name, email,dateofbirth,car,model,comment,uploaded], loadAndReset, onError);
+
+  alert("OK!");
+
+  });
+
+}
+</script>
+</body>
+   </html>
