@@ -1,0 +1,41 @@
+<html>
+
+
+<script type="text/javascript" src="jquery-3.3.1.js"></script>
+
+<script>
+
+function GetParameter()
+{
+
+// Check browser support
+	if (typeof(Storage) !== "undefined") {
+
+            document.getElementById("email").value=localStorage.getItem("email") ;
+
+
+	} else {
+	    document.getElementById("email").value = "Sorry, your browser does not support Web Storage...";
+	}
+
+}
+
+$(document).ready(function () // Call function when page is ready for load..
+
+{
+;
+
+    $("body").fadeIn(2000); // Fede In Effect when Page Load..
+    GetParameter();
+});
+
+</script>
+
+<body>
+<table>
+<tr>
+<td>
+<input type='email' class='input' name='email' id = 'email' placeholder='Usuario'/>
+</td>
+</tr>
+</table>
